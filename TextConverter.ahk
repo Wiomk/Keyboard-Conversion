@@ -1,13 +1,12 @@
-﻿; Горячие клавиши для исправления раскладки
-^!r:: ; Ctrl+Alt+R - исправить раскладку выделенного текста
+﻿^!r::
     FixRussianEnglishLayout()
 return
 
-^!t:: ; Ctrl+Alt+T - переключить регистр
+^!t::
     ChangeCase("toggle")
 return
 
-^!a:: ; Ctrl+Alt+A - транслитерация рус->англ
+^!a::
     ClipboardOld := ClipboardAll
     Clipboard := ""
     Send ^c
@@ -22,24 +21,22 @@ return
     Clipboard := ClipboardOld
 return
 
-^!q:: ; Ctrl+Alt+Q - показать/скрыть рабочий стол (переключатель)
+^!q::
     ToggleDesktop()
 return
 
-; Функция переключения рабочего стола
 ToggleDesktop() {
     static isMinimized := false
     
     if (isMinimized) {
-        WinMinimizeAllUndo ; Разворачиваем все окна
+        WinMinimizeAllUndo
         isMinimized := false
     } else {
-        WinMinimizeAll ; Сворачиваем все окна
+        WinMinimizeAll
         isMinimized := true
     }
 }
 
-; Функция исправления раскладки
 FixRussianEnglishLayout() {
     ClipboardOld := ClipboardAll
     Clipboard := ""
@@ -56,8 +53,9 @@ FixRussianEnglishLayout() {
     Clipboard := ClipboardOld
 }
 
-; Функция изменения регистра
 ChangeCase(mode) {
+    static lastCase := "upper"
+    
     ClipboardOld := ClipboardAll
     Clipboard := ""
     Send ^c
@@ -65,7 +63,15 @@ ChangeCase(mode) {
     
     if (Clipboard != "") {
         String := Clipboard
-        String := ToggleCase(String)
+        
+        if (lastCase = "upper") {
+            StringUpper, String, String
+            lastCase := "lower"
+        } else {
+            StringLower, String, String
+            lastCase := "upper"
+        }
+        
         Clipboard := String
         Send ^v
         Sleep 100
@@ -74,7 +80,6 @@ ChangeCase(mode) {
     Clipboard := ClipboardOld
 }
 
-; Конвертация раскладки
 ConvertLayout(String) {
     static en := "qwertyuiop[]asdfghjkl;'zxcvbnm,./"
     static ru := "йцукенгшщзхъфывапролджэячсмитьбю.ё"
@@ -88,7 +93,6 @@ ConvertLayout(String) {
         if (InStr(ru, LowerChar)) {
             Pos := InStr(ru, LowerChar)
             NewChar := SubStr(en, Pos, 1)
-            ; ПРАВИЛЬНОЕ определение регистра
             if (Char == Format("{:U}", Char)) {
                 Result .= Format("{:U}", NewChar)
             } else {
@@ -111,26 +115,6 @@ ConvertLayout(String) {
     return Result
 }
 
-; Переключение регистра
-ToggleCase(String) {
-    Result := ""
-    Loop, Parse, String
-    {
-        Char := A_LoopField
-        if (Char >= "A" and Char <= "Z") or (Char >= "А" and Char <= "Я") {
-            Result .= Format("{:L}", Char)
-        }
-        else if (Char >= "a" and Char <= "z") or (Char >= "а" and Char <= "я") {
-            Result .= Format("{:U}", Char)
-        }
-        else {
-            Result .= Char
-        }
-    }
-    return Result
-}
-
-; Транслитерация рус->англ
 Transliterate(text) {
     static map := { "а":"a", "б":"b", "в":"v", "г":"g", "д":"d", "е":"e", "ё":"yo"
                   , "ж":"zh", "з":"z", "и":"i", "й":"y", "к":"k", "л":"l", "м":"m"
